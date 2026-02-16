@@ -35,48 +35,53 @@ make build
 
 There are useful options. (`spanforge --help`)
 
+Run `make docs` to refresh this block.
+<!-- BEGIN AUTO-GENERATED FLAGS -->
 ```console
-Options:
-      --config string               Path to YAML config file
-      --rate float                  Generation rate amount (default 200)
-      --rate-unit string            Rate unit: spans or traces (default "spans")
-      --rate-interval duration      Time interval for rate amount (default 1s)
-      --duration duration           Run duration (default 30s)
-      --count int                   Total span/trace count (overrides duration if > 0)
-      --seed int                    Random seed (default 1)
-      --workers int                 Concurrent generator workers (default 1)
-      --profile string              Generation profile: web|grpc|queue|batch (default "web")
-      --routes int                  Number of named routes/methods/topics/jobs used by profile (default 8)
-      --services int                Number of services (default 8)
-      --depth int                   Max trace depth (default 4)
-      --fanout float                Average span fanout (default 2)
-      --service-prefix string       Service name prefix (default "svc-")
-      --p50 duration                p50 span latency (default 30ms)
-      --p95 duration                p95 span latency (default 120ms)
-      --p99 duration                p99 span latency (default 350ms)
-      --errors string               Error rate percentage (default "0.5%")
-      --retries string              Retry rate percentage (default "1%")
-      --db-heavy string             DB-intensive operation ratio (default "20%")
-      --cache-hit-rate string       Cache hit ratio (default "85%")
-      --variety string              Variety level: low|medium|high (default "medium")
-      --high-cardinality            Enable high-cardinality attributes
-      --format string               Output format: otlp-http|otlp-grpc|zipkin-json|jsonl|pretty (default "jsonl")
-      --output string               Output sink: stdout|file|otlp|zipkin|noop (default "stdout")
-      --file string                 Output file path
-      --otlp-endpoint string        OTLP endpoint
-      --zipkin-endpoint string      Zipkin endpoint
-      --headers strings             Additional headers (repeat k=v)
-      --compress string             Compression for OTLP HTTP (gzip)
-      --batch-size int              Spans per batch (default 512)
-      --flush-interval duration     Sink flush interval (default 200ms)
-      --sink-retries int            Retry attempts for sink requests (default 2)
-      --sink-retry-backoff duration Backoff between sink retries (default 300ms)
-      --sink-timeout duration       Per-request sink timeout (default 10s)
-      --sink-max-in-flight int      Maximum concurrent in-flight sink requests (default 2)
-      --report-file string          Write run summary as JSON to this path
-      --http-listen string          Admin HTTP listen address for /healthz and /stats (default "127.0.0.1:8080")
-      --version                     Print version and exit
+Flags:
+      --batch-size int                Spans per batch (default 512)
+      --cache-hit-rate string         Cache hit ratio (default "85%")
+      --compress string               Compression for OTLP HTTP (gzip)
+      --config string                 Path to YAML config file
+      --count int                     Total span/trace count (overrides duration if > 0)
+      --db-heavy string               DB-intensive operation ratio (default "20%")
+      --depth int                     Max trace depth (default 4)
+      --duration duration             Run duration (default 30s)
+      --errors string                 Error rate percentage (default "0.5%")
+      --fanout float                  Average span fanout (default 2)
+      --file string                   Output file path
+      --flush-interval duration       Sink flush interval (default 200ms)
+      --format string                 Output format (default "jsonl")
+      --headers strings               Additional headers (repeat k=v)
+  -h, --help                          help for spanforge
+      --high-cardinality              Enable high-cardinality attributes (request IDs, message IDs)
+      --http-listen string            Admin HTTP listen address for /healthz and /stats (default "127.0.0.1:8080")
+      --otlp-endpoint string          OTLP endpoint
+      --otlp-insecure                 Use insecure OTLP gRPC transport (default true)
+      --output string                 Output sink (default "stdout")
+      --p50 duration                  p50 span latency (default 30ms)
+      --p95 duration                  p95 span latency (default 120ms)
+      --p99 duration                  p99 span latency (default 350ms)
+      --profile string                Generation profile (default "web")
+      --rate float                    Generation rate amount (default 200)
+      --rate-interval duration        Time interval for rate amount (default 1s)
+      --rate-unit string              Rate unit: spans or traces (default "spans")
+      --report-file string            Write run summary as JSON to this path
+      --retries string                Retry rate percentage (default "1%")
+      --routes int                    Number of named routes/methods per profile (default 8)
+      --seed int                      Random seed (default 1)
+      --service-prefix string         Service name prefix (default "svc-")
+      --services int                  Number of services (default 8)
+      --sink-max-in-flight int        Maximum concurrent in-flight sink requests (default 2)
+      --sink-retries int              Retry attempts for sink requests (default 2)
+      --sink-retry-backoff duration   Backoff between sink retries (default 300ms)
+      --sink-timeout duration         Per-request sink timeout (default 10s)
+      --variety string                Variety level: low, medium, high (default "medium")
+      --version                       Print version and exit
+      --workers int                   Concurrent generator workers (default 1)
+      --zipkin-endpoint string        Zipkin endpoint
 ```
+<!-- END AUTO-GENERATED FLAGS -->
 
 ```console
 # Generate traces to stdout (JSONL)
