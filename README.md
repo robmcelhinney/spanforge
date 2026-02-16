@@ -16,7 +16,7 @@ go install github.com/robmcelhinney/spanforge/cmd/spanforge@latest
 
 ### Using .tar.gz archive
 
-Download an archive from GitHub Releases (when a tagged release is available), then copy `spanforge` to your system path.
+Download an archive from GitHub Releases, then copy `spanforge` to your system path.
 
 ### Using docker
 
