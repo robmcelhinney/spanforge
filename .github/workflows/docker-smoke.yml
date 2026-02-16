@@ -38,22 +38,30 @@ jobs:
 
       - name: Assert spans emitted
         run: |
-          curl -fsS ${{ matrix.stack.stats_url }} >/tmp/stats.json
-          cat /tmp/stats.json
-          spans=$(grep -oE '"emitted_spans":[0-9]+' /tmp/stats.json | cut -d: -f2)
-          if [ -z "$spans" ] || [ "$spans" -le 0 ]; then
-            echo "expected emitted_spans > 0, got '$spans'" >&2
-            exit 1
-          fi
+          for i in $(seq 1 40); do
+            curl -fsS ${{ matrix.stack.stats_url }} >/tmp/stats.json
+            cat /tmp/stats.json
+            spans=$(grep -oE '"emitted_spans":[0-9]+' /tmp/stats.json | cut -d: -f2)
+            if [ -n "$spans" ] && [ "$spans" -gt 0 ]; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "expected emitted_spans > 0 within timeout, last='$spans'" >&2
+          exit 1
 
       - name: Assert collector exported spans
         run: |
-          curl -fsS http://127.0.0.1:18888/metrics >/tmp/collector-metrics.txt
-          if ! grep -Eq 'otelcol_exporter_sent_spans\{[^}]*exporter="otlp"[^}]*\} [1-9][0-9]*' /tmp/collector-metrics.txt; then
-            echo "collector did not report sent spans" >&2
-            tail -n 80 /tmp/collector-metrics.txt
-            exit 1
-          fi
+          for i in $(seq 1 40); do
+            curl -fsS http://127.0.0.1:18888/metrics >/tmp/collector-metrics.txt
+            if grep -Eq 'otelcol_exporter_sent_spans\{[^}]*exporter="otlp"[^}]*\} [1-9][0-9]*' /tmp/collector-metrics.txt; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "collector did not report sent spans within timeout" >&2
+          tail -n 80 /tmp/collector-metrics.txt
+          exit 1
 
       - name: Dump logs on failure
         if: failure()
