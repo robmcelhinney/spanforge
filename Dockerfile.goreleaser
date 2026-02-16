@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+
+FROM gcr.io/distroless/static-debian12:nonroot
+
+# GoReleaser provides architecture-specific binaries in the Docker build context.
+ARG TARGETARCH
+COPY linux/${TARGETARCH}/spanforge /spanforge
+ENTRYPOINT ["/spanforge"]

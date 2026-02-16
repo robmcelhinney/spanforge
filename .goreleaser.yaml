@@ -32,33 +32,19 @@ archives:
 checksum:
   name_template: checksums.txt
 
-dockers:
-  - id: docker-amd64
-    dockerfile: Dockerfile
-    use: buildx
-    goos: linux
-    goarch: amd64
-    image_templates:
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-amd64
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-amd64
-  - id: docker-arm64
-    dockerfile: Dockerfile
-    use: buildx
-    goos: linux
-    goarch: arm64
-    image_templates:
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-arm64
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-arm64
-
-docker_manifests:
-  - name_template: ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}
-    image_templates:
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-amd64
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-arm64
-  - name_template: ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest
-    image_templates:
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-amd64
-      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-arm64
+dockers_v2:
+  - id: spanforge
+    dockerfile: Dockerfile.goreleaser
+    ids:
+      - spanforge
+    images:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge
+    tags:
+      - "{{ .Version }}"
+      - latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
 
 release:
   draft: false
