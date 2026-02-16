@@ -33,10 +33,12 @@ make build
 
 ## Usage
 
-There are useful options. (`spanforge --help`)
+To see the options (`spanforge --help`)
 
 Run `make docs` to refresh this block.
+
 <!-- BEGIN AUTO-GENERATED FLAGS -->
+
 ```console
 Flags:
       --batch-size int                Spans per batch (default 512)
@@ -81,6 +83,7 @@ Flags:
       --workers int                   Concurrent generator workers (default 1)
       --zipkin-endpoint string        Zipkin endpoint
 ```
+
 <!-- END AUTO-GENERATED FLAGS -->
 
 ```console
