@@ -1,0 +1,55 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.98.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "14317:4317"
+      - "14318:4318"
+      - "18888:8888"
+    depends_on:
+      - jaeger
+
+  spanforge:
+    build:
+      context: ../../..
+      dockerfile: Dockerfile
+    command:
+      - --format
+      - otlp-http
+      - --output
+      - otlp
+      - --otlp-endpoint
+      - http://otel-collector:4318
+      - --profile
+      - web
+      - --rate
+      - "40"
+      - --rate-unit
+      - traces
+      - --rate-interval
+      - 1s
+      - --duration
+      - 10m
+      - --workers
+      - "2"
+      - --batch-size
+      - "512"
+      - --flush-interval
+      - 200ms
+      - --http-listen
+      - 0.0.0.0:8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      - otel-collector

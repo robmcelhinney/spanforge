@@ -1,0 +1,64 @@
+name: Docker Smoke
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stack:
+          - name: tempo
+            compose_file: examples/docker-compose/tempo/docker-compose.yml
+            stats_url: http://127.0.0.1:8080/stats
+          - name: jaeger
+            compose_file: examples/docker-compose/jaeger/docker-compose.yml
+            stats_url: http://127.0.0.1:8081/stats
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose -f ${{ matrix.stack.compose_file }} up -d --build
+
+      - name: Wait for spanforge stats endpoint
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS ${{ matrix.stack.stats_url }} >/tmp/stats.json; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "stats endpoint did not become ready" >&2
+          exit 1
+
+      - name: Assert spans emitted
+        run: |
+          curl -fsS ${{ matrix.stack.stats_url }} >/tmp/stats.json
+          cat /tmp/stats.json
+          spans=$(grep -oE '"emitted_spans":[0-9]+' /tmp/stats.json | cut -d: -f2)
+          if [ -z "$spans" ] || [ "$spans" -le 0 ]; then
+            echo "expected emitted_spans > 0, got '$spans'" >&2
+            exit 1
+          fi
+
+      - name: Assert collector exported spans
+        run: |
+          curl -fsS http://127.0.0.1:18888/metrics >/tmp/collector-metrics.txt
+          if ! grep -Eq 'otelcol_exporter_sent_spans\{[^}]*exporter="otlp"[^}]*\} [1-9][0-9]*' /tmp/collector-metrics.txt; then
+            echo "collector did not report sent spans" >&2
+            tail -n 80 /tmp/collector-metrics.txt
+            exit 1
+          fi
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f ${{ matrix.stack.compose_file }} logs --no-color
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f ${{ matrix.stack.compose_file }} down -v

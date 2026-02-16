@@ -1,0 +1,64 @@
+version: 2
+
+project_name: spanforge
+
+before:
+  hooks:
+    - go test ./...
+
+builds:
+  - id: spanforge
+    binary: spanforge
+    main: ./cmd/spanforge
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+dockers:
+  - id: docker-amd64
+    dockerfile: Dockerfile
+    use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-amd64
+  - id: docker-arm64
+    dockerfile: Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-arm64
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-arm64
+
+docker_manifests:
+  - name_template: ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-amd64
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:{{ .Version }}-arm64
+  - name_template: ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest
+    image_templates:
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-amd64
+      - ghcr.io/{{ .Env.GITHUB_REPOSITORY_OWNER }}/spanforge:latest-arm64
+
+release:
+  draft: false

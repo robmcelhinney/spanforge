@@ -1,0 +1,38 @@
+rate: 150
+rate_unit: traces
+rate_interval: 1s
+duration: 2m
+seed: 7
+workers: 2
+
+profile: web
+routes: 10
+services: 8
+depth: 4
+fanout: 2.0
+service_prefix: svc-
+
+p50: 30ms
+p95: 120ms
+p99: 350ms
+errors: 0.5%
+retries: 1%
+db_heavy: 20%
+cache_hit_rate: 85%
+variety: medium
+high_cardinality: false
+
+format: otlp-http
+output: otlp
+otlp_endpoint: http://localhost:4318
+headers:
+  - authorization=Bearer dev-token
+compress: gzip
+batch_size: 512
+flush_interval: 200ms
+sink_retries: 2
+sink_retry_backoff: 300ms
+sink_timeout: 10s
+sink_max_in_flight: 2
+report_file: ./out/run-report.json
+http_listen: 127.0.0.1:8080

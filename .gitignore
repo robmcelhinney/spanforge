@@ -1,0 +1,19 @@
+# Binaries and build outputs
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test artifacts
+*.test
+*.out
+coverage.out
+
+# Dependency/vendor directories
+/vendor/
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
