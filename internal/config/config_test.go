@@ -163,3 +163,70 @@ func TestValidateNoopOutput(t *testing.T) {
 		t.Fatalf("expected noop to validate: %v", err)
 	}
 }
+
+func TestValidateAllowsUnlimitedDuration(t *testing.T) {
+	cfg := Config{
+		RateValue:        1,
+		RateUnit:         RateUnitSpans,
+		RateInterval:     1,
+		Duration:         0,
+		Count:            0,
+		Workers:          1,
+		Profile:          "web",
+		Routes:           1,
+		Services:         1,
+		Depth:            1,
+		Fanout:           1,
+		P50:              1,
+		P95:              2,
+		P99:              3,
+		Errors:           0,
+		Retries:          0,
+		CacheHitRate:     1,
+		Variety:          "medium",
+		Format:           "jsonl",
+		Output:           "stdout",
+		BatchSize:        1,
+		FlushInterval:    1,
+		SinkRetries:      0,
+		SinkRetryBackoff: 1,
+		SinkTimeout:      1,
+		SinkMaxInFlight:  1,
+	}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("expected unlimited duration to validate: %v", err)
+	}
+}
+
+func TestValidateRejectsNegativeDuration(t *testing.T) {
+	cfg := Config{
+		RateValue:        1,
+		RateUnit:         RateUnitSpans,
+		RateInterval:     1,
+		Duration:         -1,
+		Workers:          1,
+		Profile:          "web",
+		Routes:           1,
+		Services:         1,
+		Depth:            1,
+		Fanout:           1,
+		P50:              1,
+		P95:              2,
+		P99:              3,
+		Errors:           0,
+		Retries:          0,
+		CacheHitRate:     1,
+		Variety:          "medium",
+		Format:           "jsonl",
+		Output:           "stdout",
+		BatchSize:        1,
+		FlushInterval:    1,
+		SinkRetries:      0,
+		SinkRetryBackoff: 1,
+		SinkTimeout:      1,
+		SinkMaxInFlight:  1,
+	}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected validation error for negative duration")
+	}
+}

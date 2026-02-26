@@ -15,12 +15,15 @@ CLI flags override YAML values when both are set.
 Environment variables are also supported using `SPANFORGE_*` names.
 Precedence is: `CLI flags > env vars > YAML config > built-in defaults`.
 
+Set `duration: 0s` (or `--duration 0s`) to run indefinitely with no duration limit.
+
 Examples:
 
 - `SPANFORGE_FORMAT=otlp-http`
 - `SPANFORGE_OUTPUT=otlp`
 - `SPANFORGE_OTLP_ENDPOINT=http://localhost:4318`
 - `SPANFORGE_HEADERS=authorization=Bearer token,x-tenant=demo`
+- `SPANFORGE_DEBUG=true`
 
 ## Zipkin Output
 
@@ -179,7 +182,7 @@ curl -s http://127.0.0.1:8080/stats
   --rate 100 \
   --rate-unit spans \
   --rate-interval 1s \
-  --duration 30s \
+  --duration 0s \
   --http-listen 127.0.0.1:8080
 ```
 

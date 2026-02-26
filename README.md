@@ -48,7 +48,8 @@ Flags:
       --count int                     Total span/trace count (overrides duration if > 0)
       --db-heavy string               DB-intensive operation ratio (default "20%")
       --depth int                     Max trace depth (default 4)
-      --duration duration             Run duration (default 30s)
+      --debug                         Enable debug logs for trace emission and sink sends
+      --duration duration             Run duration (set to 0s for no time limit) (default 30s)
       --errors string                 Error rate percentage (default "0.5%")
       --fanout float                  Average span fanout (default 2)
       --file string                   Output file path
@@ -99,6 +100,12 @@ $ spanforge --format zipkin-json --output zipkin --zipkin-endpoint http://localh
 # Run benchmark mode with sink disabled and write JSON report
 $ spanforge --output noop --format otlp-http --duration 30s --report-file ./out/report.json
 
+# Run continuously (no duration deadline)
+$ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --duration 0s
+
+# Run with debug logs (written to stderr)
+$ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --debug
+
 # Load from YAML config, override one value via CLI
 $ SPANFORGE_OUTPUT=otlp spanforge --config examples/config/spanforge.yaml --rate 300
 ```
@@ -136,6 +143,7 @@ Examples:
 - `SPANFORGE_OUTPUT=otlp`
 - `SPANFORGE_OTLP_ENDPOINT=http://localhost:4318`
 - `SPANFORGE_HEADERS=authorization=Bearer token,x-tenant=demo`
+- `SPANFORGE_DEBUG=true`
 
 ## Docker Compose Examples
 

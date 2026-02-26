@@ -53,6 +53,7 @@ type Config struct {
 	SinkMaxInFlight  int
 	ReportFile       string
 	HTTPListen       string
+	Debug            bool
 }
 
 func ParseRateUnit(raw string) (RateUnit, error) {
@@ -103,8 +104,11 @@ func (c Config) Validate() error {
 	if c.RateUnit != RateUnitSpans && c.RateUnit != RateUnitTraces {
 		return fmt.Errorf("rate-unit must be spans or traces")
 	}
-	if c.Duration <= 0 && c.Count <= 0 {
-		return fmt.Errorf("one of duration or count must be > 0")
+	if c.Duration < 0 {
+		return fmt.Errorf("duration must be >= 0")
+	}
+	if c.Count < 0 {
+		return fmt.Errorf("count must be >= 0")
 	}
 	if c.Workers <= 0 {
 		return fmt.Errorf("workers must be > 0")

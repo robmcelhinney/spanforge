@@ -21,6 +21,13 @@ import (
 	"github.com/robmcelhinney/spanforge/internal/sink/zipkin"
 )
 
+func debugf(cfg config.Config, format string, args ...any) {
+	if !cfg.Debug {
+		return
+	}
+	_, _ = fmt.Fprintf(os.Stderr, "spanforge debug: "+format+"\n", args...)
+}
+
 type runReport struct {
 	StartedAt       time.Time `json:"started_at"`
 	FinishedAt      time.Time `json:"finished_at"`
@@ -36,6 +43,7 @@ type runReport struct {
 func Run(cfg config.Config, out io.Writer) error {
 	stats := newEmitterStats()
 	runStarted := time.Now().UTC()
+	debugf(cfg, "starting run format=%s output=%s rate=%.2f/%s duration=%s count=%d workers=%d", cfg.Format, cfg.Output, cfg.RateValue, cfg.RateUnit, cfg.Duration, cfg.Count, cfg.Workers)
 
 	writer := out
 	if cfg.Output == "file" {
@@ -198,14 +206,18 @@ func produceTraces(ctx context.Context, cfg config.Config, traceCh chan<- model.
 	tokens := capacity
 	lastRefill := time.Now()
 	start := lastRefill.UTC()
-	durationDeadline := start.Add(cfg.Duration)
+	hasDurationLimit := cfg.Count <= 0 && cfg.Duration > 0
+	var durationDeadline time.Time
+	if hasDurationLimit {
+		durationDeadline = start.Add(cfg.Duration)
+	}
 
 	sent := 0
 	for {
 		if cfg.Count > 0 && sent >= cfg.Count {
 			break
 		}
-		if cfg.Count <= 0 && time.Now().After(durationDeadline) {
+		if hasDurationLimit && time.Now().After(durationDeadline) {
 			break
 		}
 
@@ -222,7 +234,7 @@ func produceTraces(ctx context.Context, cfg config.Config, traceCh chan<- model.
 			if cfg.Count > 0 && sent >= cfg.Count {
 				break
 			}
-			if cfg.Count <= 0 && time.Now().After(durationDeadline) {
+			if hasDurationLimit && time.Now().After(durationDeadline) {
 				break
 			}
 
@@ -345,11 +357,14 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 		go func() {
 			defer networkWG.Done()
 			defer func() { <-networkSem }()
+			debugf(cfg, "sending batch output=%s format=%s traces=%d spans=%d", cfg.Output, cfg.Format, batchTraces, batchSpans)
 			if err := sendWithRetry(ctx, cfg.SinkRetries, cfg.SinkRetryBackoff, cfg.SinkTimeout, send); err != nil {
+				debugf(cfg, "send failed output=%s format=%s traces=%d spans=%d err=%v", cfg.Output, cfg.Format, batchTraces, batchSpans, err)
 				reportNetworkErr(err)
 				return
 			}
 			stats.add(batchTraces, batchSpans)
+			debugf(cfg, "send complete output=%s format=%s traces=%d spans=%d", cfg.Output, cfg.Format, batchTraces, batchSpans)
 		}()
 		return nil
 	}
@@ -369,6 +384,7 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 			return err
 		}
 		stats.add(batchTraces, batchSpans)
+		debugf(cfg, "wrote batch output=%s format=%s traces=%d spans=%d", cfg.Output, cfg.Format, batchTraces, batchSpans)
 		return nil
 	}
 	flushOTLP := func() error {
@@ -495,6 +511,7 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 					return err
 				}
 				stats.add(1, len(trace.Spans))
+				debugf(cfg, "wrote trace output=%s format=%s traces=1 spans=%d", cfg.Output, cfg.Format, len(trace.Spans))
 			default:
 				return fmt.Errorf("unsupported format %q in this stage", cfg.Format)
 			}

@@ -51,6 +51,7 @@ type FlagValues struct {
 	SinkMaxInFlight  int
 	ReportFile       string
 	HTTPListen       string
+	Debug            bool
 }
 
 type yamlFlagValues struct {
@@ -92,6 +93,7 @@ type yamlFlagValues struct {
 	SinkMaxInFlight  *int     `yaml:"sink_max_in_flight"`
 	ReportFile       *string  `yaml:"report_file"`
 	HTTPListen       *string  `yaml:"http_listen"`
+	Debug            *bool    `yaml:"debug"`
 }
 
 func AddFlags(fs *pflag.FlagSet, v *FlagValues) {
@@ -99,7 +101,7 @@ func AddFlags(fs *pflag.FlagSet, v *FlagValues) {
 	fs.Float64Var(&v.Rate, "rate", 200, "Generation rate amount")
 	fs.StringVar(&v.RateUnit, "rate-unit", "spans", "Rate unit: spans or traces")
 	fs.DurationVar(&v.RateInterval, "rate-interval", 1*time.Second, "Time interval for rate amount")
-	fs.DurationVar(&v.Duration, "duration", 30*time.Second, "Run duration")
+	fs.DurationVar(&v.Duration, "duration", 30*time.Second, "Run duration (set to 0s for no time limit)")
 	fs.IntVar(&v.Count, "count", 0, "Total span/trace count (overrides duration if > 0)")
 	fs.Int64Var(&v.Seed, "seed", 1, "Random seed")
 	fs.IntVar(&v.Workers, "workers", 1, "Concurrent generator workers")
@@ -134,6 +136,7 @@ func AddFlags(fs *pflag.FlagSet, v *FlagValues) {
 	fs.IntVar(&v.SinkMaxInFlight, "sink-max-in-flight", 2, "Maximum concurrent in-flight sink requests")
 	fs.StringVar(&v.ReportFile, "report-file", "", "Write run summary as JSON to this path")
 	fs.StringVar(&v.HTTPListen, "http-listen", "127.0.0.1:8080", "Admin HTTP listen address for /healthz and /stats")
+	fs.BoolVar(&v.Debug, "debug", false, "Enable debug logs for trace emission and sink sends")
 }
 
 func FromFlags(v FlagValues) (Config, error) {
@@ -225,6 +228,7 @@ func FromFlagsWithOverrides(v FlagValues, cliOverrides map[string]bool) (Config,
 		SinkMaxInFlight:  v.SinkMaxInFlight,
 		ReportFile:       v.ReportFile,
 		HTTPListen:       v.HTTPListen,
+		Debug:            v.Debug,
 	}
 
 	if err := cfg.Validate(); err != nil {
@@ -342,6 +346,7 @@ func mergeFromYAML(v FlagValues, cliOverrides map[string]bool) (FlagValues, erro
 	setInt("sink-max-in-flight", y.SinkMaxInFlight, &v.SinkMaxInFlight)
 	setString("report-file", y.ReportFile, &v.ReportFile)
 	setString("http-listen", y.HTTPListen, &v.HTTPListen)
+	setBool("debug", y.Debug, &v.Debug)
 
 	return v, nil
 }
@@ -529,6 +534,9 @@ func mergeFromEnv(v FlagValues, cliOverrides map[string]bool) (FlagValues, error
 	}
 	setString("report-file", "SPANFORGE_REPORT_FILE", &v.ReportFile)
 	setString("http-listen", "SPANFORGE_HTTP_LISTEN", &v.HTTPListen)
+	if err := setBool("debug", "SPANFORGE_DEBUG", &v.Debug); err != nil {
+		return FlagValues{}, err
+	}
 
 	return v, nil
 }

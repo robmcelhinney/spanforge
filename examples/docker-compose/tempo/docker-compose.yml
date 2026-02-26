@@ -51,7 +51,7 @@ services:
       - --rate-interval
       - 1s
       - --duration
-      - 10m
+      - 0s
       - --workers
       - "2"
       - --batch-size

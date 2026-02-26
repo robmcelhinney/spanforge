@@ -193,3 +193,91 @@ func TestFromFlagsEnvOverridesYAMLAndCLIOverridesEnv(t *testing.T) {
 		t.Fatalf("services=%d want 5", cfg.Services)
 	}
 }
+
+func TestFromFlagsWithYAMLDebug(t *testing.T) {
+	tmp := t.TempDir()
+	cfgPath := filepath.Join(tmp, "spanforge.yaml")
+	if err := os.WriteFile(cfgPath, []byte("debug: true\n"), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	flags := FlagValues{
+		ConfigFile:       cfgPath,
+		Rate:             200,
+		RateUnit:         "spans",
+		RateInterval:     time.Second,
+		Duration:         30 * time.Second,
+		Workers:          1,
+		Profile:          "web",
+		Routes:           8,
+		Services:         5,
+		Depth:            4,
+		Fanout:           2,
+		ServicePrefix:    "svc-",
+		P50:              30 * time.Millisecond,
+		P95:              120 * time.Millisecond,
+		P99:              350 * time.Millisecond,
+		Errors:           "0.5%",
+		Retries:          "1%",
+		DBHeavy:          "20%",
+		CacheHitRate:     "85%",
+		Variety:          "medium",
+		Format:           "jsonl",
+		Output:           "stdout",
+		BatchSize:        512,
+		FlushInterval:    200 * time.Millisecond,
+		SinkRetries:      2,
+		SinkRetryBackoff: 300 * time.Millisecond,
+		SinkTimeout:      10 * time.Second,
+		SinkMaxInFlight:  2,
+	}
+
+	cfg, err := FromFlagsWithOverrides(flags, nil)
+	if err != nil {
+		t.Fatalf("FromFlagsWithOverrides: %v", err)
+	}
+	if !cfg.Debug {
+		t.Fatal("expected debug=true from YAML")
+	}
+}
+
+func TestFromFlagsEnvDebug(t *testing.T) {
+	t.Setenv("SPANFORGE_DEBUG", "true")
+	flags := FlagValues{
+		Rate:             200,
+		RateUnit:         "spans",
+		RateInterval:     time.Second,
+		Duration:         30 * time.Second,
+		Workers:          1,
+		Profile:          "web",
+		Routes:           8,
+		Services:         5,
+		Depth:            4,
+		Fanout:           2,
+		ServicePrefix:    "svc-",
+		P50:              30 * time.Millisecond,
+		P95:              120 * time.Millisecond,
+		P99:              350 * time.Millisecond,
+		Errors:           "0.5%",
+		Retries:          "1%",
+		DBHeavy:          "20%",
+		CacheHitRate:     "85%",
+		Variety:          "medium",
+		Format:           "jsonl",
+		Output:           "stdout",
+		BatchSize:        512,
+		FlushInterval:    200 * time.Millisecond,
+		SinkRetries:      2,
+		SinkRetryBackoff: 300 * time.Millisecond,
+		SinkTimeout:      10 * time.Second,
+		SinkMaxInFlight:  2,
+	}
+
+	cfg, err := FromFlagsWithOverrides(flags, nil)
+	if err != nil {
+		t.Fatalf("FromFlagsWithOverrides: %v", err)
+	}
+	if !cfg.Debug {
+		t.Fatal("expected debug=true from env")
+	}
+}
