@@ -165,7 +165,9 @@ docker compose -f examples/docker-compose/tempo/docker-compose.yml up --build
 
 4. Open Grafana at `http://localhost:${GRAFANA_PORT:-3000}`, go to Explore, select `Tempo`, and search traces.
 
-5. Admin endpoints are available while spanforge is running:
+5. Admin endpoints are available while spanforge is running.
+   In Docker/container setups, use `--http-listen 0.0.0.0:8080` so the endpoint is reachable outside the container.
+   Keep `127.0.0.1:8080` for host-only/local runs to avoid unnecessary exposure.
 
 ```bash
 curl -s http://127.0.0.1:8080/healthz
@@ -184,6 +186,12 @@ curl -s http://127.0.0.1:8080/stats
   --rate-interval 1s \
   --duration 0s \
   --http-listen 127.0.0.1:8080
+```
+
+For containerized runs (for example Docker Compose), use:
+
+```bash
+--http-listen 0.0.0.0:8080
 ```
 
 ## Releases
