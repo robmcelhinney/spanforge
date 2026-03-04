@@ -16,7 +16,7 @@ go install github.com/robmcelhinney/spanforge/cmd/spanforge@latest
 
 ### Using .tar.gz archive
 
-Download an archive from GitHub Releases, then copy `spanforge` to your system path.
+Download an archive from [GitHub Releases](https://github.com/robmcelhinney/spanforge/releases), then copy `spanforge` to your system path.
 
 ### Using docker
 
@@ -30,6 +30,22 @@ docker run -it --rm ghcr.io/robmcelhinney/spanforge:latest --help
 make build
 ./bin/spanforge --version
 ```
+
+## Supported Formats
+
+- OTLP HTTP (protobuf)
+- OTLP gRPC
+- Zipkin v2 JSON
+- JSONL
+- Pretty tree
+
+## Supported Outputs
+
+- Stdout
+- File
+- OTLP endpoint
+- Zipkin endpoint
+- Noop (benchmark mode)
 
 ## Usage
 
@@ -109,22 +125,6 @@ $ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:43
 # Load from YAML config, override one value via CLI
 $ SPANFORGE_OUTPUT=otlp spanforge --config examples/config/spanforge.yaml --rate 300
 ```
-
-## Supported Formats
-
-- OTLP HTTP (protobuf)
-- OTLP gRPC
-- Zipkin v2 JSON
-- JSONL
-- Pretty tree
-
-## Supported Outputs
-
-- Stdout
-- File
-- OTLP endpoint
-- Zipkin endpoint
-- Noop (benchmark mode)
 
 ## Environment Variables
 
