@@ -3,6 +3,8 @@ package generator
 import (
 	"testing"
 	"time"
+
+	"github.com/robmcelhinney/spanforge/internal/model"
 )
 
 func TestGRPCProfileAddsRPCAttributes(t *testing.T) {
@@ -87,4 +89,80 @@ func TestHighCardinalityAddsIDs(t *testing.T) {
 	if _, ok := root.Attributes["trace.id"]; !ok {
 		t.Fatal("expected trace.id")
 	}
+}
+
+func TestPaymentSystemProfileAddsPaymentAttributes(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Profile = "payment-system"
+	cfg.Depth = 2
+	cfg.Fanout = 7
+	cfg.Routes = 7
+	trace := New(cfg).GenerateTrace(time.Now().UTC())
+	if len(trace.Spans) == 0 {
+		t.Fatal("expected spans")
+	}
+	root := trace.Spans[0]
+	if root.Attributes["service.name"] != "edge-gateway" {
+		t.Fatalf("root service=%v want edge-gateway", root.Attributes["service.name"])
+	}
+	foundProvider := false
+	foundLedger := false
+	foundFraud := false
+	for _, span := range trace.Spans {
+		if _, ok := span.Attributes["payment.provider"]; ok {
+			foundProvider = true
+		}
+		if _, ok := span.Attributes["ledger.account_type"]; ok {
+			foundLedger = true
+		}
+		if _, ok := span.Attributes["fraud.score_bucket"]; ok {
+			foundFraud = true
+		}
+	}
+	if !foundProvider || !foundLedger || !foundFraud {
+		t.Fatalf("missing payment profile attrs provider=%v ledger=%v fraud=%v", foundProvider, foundLedger, foundFraud)
+	}
+}
+
+func TestAPIGatewayProfileAddsGatewayAttributes(t *testing.T) {
+	profile := apiGatewayProfile{}
+	now := time.Now().UTC()
+	traceID := modelTraceID(1)
+	root := profile.buildRoot("gateway", 0, now, modelSpanID(1), traceID, time.Millisecond)
+	if root.Attributes["service.name"] != "gateway" {
+		t.Fatalf("root service=%v want gateway", root.Attributes["service.name"])
+	}
+	auth := profile.buildChild(root, "", 0, now, modelSpanID(2), traceID, time.Millisecond, false, true)
+	rateLimit := profile.buildChild(root, "", 1, now, modelSpanID(3), traceID, time.Millisecond, false, true)
+	upstream := profile.buildChild(root, "", 2, now, modelSpanID(4), traceID, time.Millisecond, false, true)
+	if _, ok := auth.Attributes["auth.result"]; !ok {
+		t.Fatal("expected auth.result")
+	}
+	if _, ok := rateLimit.Attributes["rate_limit.decision"]; !ok {
+		t.Fatal("expected rate_limit.decision")
+	}
+	if _, ok := upstream.Attributes["upstream.service"]; !ok {
+		t.Fatal("expected upstream.service")
+	}
+}
+
+func TestProfileRegistryIncludesNamedProfiles(t *testing.T) {
+	if _, ok := Profile("payment-system"); !ok {
+		t.Fatal("expected payment-system profile metadata")
+	}
+	if _, ok := Profile("api-gateway"); !ok {
+		t.Fatal("expected api-gateway profile metadata")
+	}
+}
+
+func modelTraceID(seed byte) model.TraceID {
+	var id model.TraceID
+	id[0] = seed
+	return id
+}
+
+func modelSpanID(seed byte) model.SpanID {
+	var id model.SpanID
+	id[0] = seed
+	return id
 }

@@ -1,0 +1,23 @@
+phases:
+  - name: warmup
+    duration: 30s
+    rate: 100
+    rate_unit: traces
+    errors: 0.5%
+    retries: 1%
+
+  - name: brownout
+    duration: 60s
+    rate: 250
+    rate_unit: traces
+    errors: 15%
+    retries: 8%
+    p95: 2s
+    p99: 4s
+
+  - name: recovery
+    duration: 30s
+    rate: 100
+    rate_unit: traces
+    errors: 1%
+    retries: 1%

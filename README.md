@@ -54,7 +54,6 @@ To see the options (`spanforge --help`)
 Run `make docs` to refresh this block.
 
 <!-- BEGIN AUTO-GENERATED FLAGS -->
-
 ```console
 Flags:
       --batch-size int                Spans per batch (default 512)
@@ -63,8 +62,8 @@ Flags:
       --config string                 Path to YAML config file
       --count int                     Total span/trace count (overrides duration if > 0)
       --db-heavy string               DB-intensive operation ratio (default "20%")
-      --depth int                     Max trace depth (default 4)
       --debug                         Enable debug logs for trace emission and sink sends
+      --depth int                     Max trace depth (default 4)
       --duration duration             Run duration (set to 0s for no time limit) (default 30s)
       --errors string                 Error rate percentage (default "0.5%")
       --fanout float                  Average span fanout (default 2)
@@ -75,12 +74,14 @@ Flags:
   -h, --help                          help for spanforge
       --high-cardinality              Enable high-cardinality attributes (request IDs, message IDs)
       --http-listen string            Admin HTTP listen address for /healthz and /stats (default "127.0.0.1:8080")
+      --load string                   Built-in load preset
       --otlp-endpoint string          OTLP endpoint
       --otlp-insecure                 Use insecure OTLP gRPC transport (default true)
       --output string                 Output sink (default "stdout")
       --p50 duration                  p50 span latency (default 30ms)
       --p95 duration                  p95 span latency (default 120ms)
       --p99 duration                  p99 span latency (default 350ms)
+      --phase-file string             Path to load phase YAML file
       --profile string                Generation profile (default "web")
       --rate float                    Generation rate amount (default 200)
       --rate-interval duration        Time interval for rate amount (default 1s)
@@ -88,6 +89,7 @@ Flags:
       --report-file string            Write run summary as JSON to this path
       --retries string                Retry rate percentage (default "1%")
       --routes int                    Number of named routes/methods per profile (default 8)
+      --run-id string                 Stable run identifier for generated telemetry
       --seed int                      Random seed (default 1)
       --service-prefix string         Service name prefix (default "svc-")
       --services int                  Number of services (default 8)
@@ -99,13 +101,20 @@ Flags:
       --version                       Print version and exit
       --workers int                   Concurrent generator workers (default 1)
       --zipkin-endpoint string        Zipkin endpoint
-```
 
+Use "spanforge [command] --help" for more information about a command.
+```
 <!-- END AUTO-GENERATED FLAGS -->
 
 ```console
 # Generate traces to stdout (JSONL)
 $ spanforge
+
+# Preview a realistic checkout trace tree
+$ spanforge --profile payment-system --format pretty --output stdout --count 1 --seed 7
+
+# Preview shallow API gateway traffic
+$ spanforge --profile api-gateway --format pretty --output stdout --count 1 --seed 7
 
 # Send OTLP HTTP traces to collector for 2 minutes
 $ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --rate 100 --rate-unit traces --duration 2m
@@ -125,6 +134,36 @@ $ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:43
 # Load from YAML config, override one value via CLI
 $ SPANFORGE_OUTPUT=otlp spanforge --config examples/config/spanforge.yaml --rate 300
 ```
+
+## Realistic Profiles
+
+List available profiles:
+
+```bash
+spanforge profiles list
+spanforge profiles show payment-system
+```
+
+`payment-system` generates recognizable checkout/refund traces across `edge-gateway`, `checkout-api`, `cart-service`, `pricing-service`, `fraud-service`, `payment-service`, `ledger-service`, and `email-service`.
+
+![payment-system trace preview](docs/assets/payment-system-preview.svg)
+
+Example preview:
+
+```text
+POST /checkout
+  handle checkout
+  load cart
+  calculate pricing
+  score fraud risk
+  authorize payment
+  write ledger entry
+  send receipt
+```
+
+`api-gateway` generates shallow high-volume gateway traces with auth checks, rate-limit decisions, upstream API calls, route tiers, and HTTP status distribution.
+
+![api-gateway trace preview](docs/assets/api-gateway-preview.svg)
 
 ## Environment Variables
 
@@ -148,6 +187,7 @@ Examples:
 ## Docker Compose Examples
 
 - Tempo stack: `examples/docker-compose/tempo/docker-compose.yml`
+- Tempo/Grafana dashboard demo: `examples/docker-compose/tempo-grafana/docker-compose.yml`
 - Jaeger stack: `examples/docker-compose/jaeger/docker-compose.yml`
 
 ## Development
@@ -162,6 +202,12 @@ make bench-transport
 ## Further Reading
 
 Detailed runbooks, presets, and release/CI notes are in `docs/further-info.md`.
+
+Planning docs:
+
+- `ROADMAP.md` tracks the current product roadmap.
+- `spanforge_action_checklist.md` tracks implementation status and next actions.
+- `spanforge_plan.md` is the original MVP blueprint.
 
 ## License
 

@@ -76,3 +76,23 @@ func TestRootSpanIsServer(t *testing.T) {
 		t.Fatalf("root span kind=%q want SERVER", trace.Spans[0].Kind)
 	}
 }
+
+func TestRunAttributesAddedToSpans(t *testing.T) {
+	cfg := baseConfig()
+	cfg.RunID = "test-run"
+	trace := New(cfg).GenerateTrace(time.Now().UTC())
+	if len(trace.Spans) == 0 {
+		t.Fatal("expected spans")
+	}
+	for _, span := range trace.Spans {
+		if span.Attributes["spanforge.run_id"] != "test-run" {
+			t.Fatalf("spanforge.run_id=%v want test-run", span.Attributes["spanforge.run_id"])
+		}
+		if span.Attributes["spanforge.profile"] != "web" {
+			t.Fatalf("spanforge.profile=%v want web", span.Attributes["spanforge.profile"])
+		}
+		if span.Attributes["spanforge.seed"] != int64(42) {
+			t.Fatalf("spanforge.seed=%v want 42", span.Attributes["spanforge.seed"])
+		}
+	}
+}

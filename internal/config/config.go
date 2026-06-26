@@ -21,6 +21,10 @@ type Config struct {
 	Duration         time.Duration
 	Count            int
 	Seed             int64
+	RunID            string
+	PhaseFile        string
+	Load             string
+	Phase            string
 	Workers          int
 	Profile          string
 	Routes           int
@@ -110,6 +114,9 @@ func (c Config) Validate() error {
 	if c.Count < 0 {
 		return fmt.Errorf("count must be >= 0")
 	}
+	if strings.TrimSpace(c.PhaseFile) != "" && strings.TrimSpace(c.Load) != "" {
+		return fmt.Errorf("phase-file and load cannot both be set")
+	}
 	if c.Workers <= 0 {
 		return fmt.Errorf("workers must be > 0")
 	}
@@ -136,9 +143,9 @@ func (c Config) Validate() error {
 	}
 
 	switch c.Profile {
-	case "web", "grpc", "queue", "batch":
+	case "web", "grpc", "queue", "batch", "payment-system", "api-gateway":
 	default:
-		return fmt.Errorf("profile must be one of web, grpc, queue, batch")
+		return fmt.Errorf("profile must be one of web, grpc, queue, batch, payment-system, api-gateway")
 	}
 
 	switch strings.ToLower(strings.TrimSpace(c.Variety)) {

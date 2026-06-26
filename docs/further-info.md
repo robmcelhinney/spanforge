@@ -121,6 +121,35 @@ You can also write a structured JSON report:
 ./bin/spanforge --output noop --format otlp-http --duration 15s --report-file ./out/report.json
 ```
 
+### Simulate a Checkout Brownout
+
+Use a built-in load preset:
+
+```bash
+./bin/spanforge \
+  --profile web \
+  --load brownout \
+  --format otlp-http \
+  --output otlp \
+  --otlp-endpoint http://localhost:4318 \
+  --duration 2m \
+  --report-file ./out/brownout-report.json
+```
+
+Or use an explicit phase file:
+
+```bash
+./bin/spanforge \
+  --profile web \
+  --phase-file examples/phases/checkout-brownout.yaml \
+  --format otlp-http \
+  --output otlp \
+  --otlp-endpoint http://localhost:4318 \
+  --report-file ./out/brownout-report.json
+```
+
+Each span includes `spanforge.phase`, and the report file includes per-phase trace/span totals.
+
 ### 3) High Variety Stress (demo richness)
 
 ```bash
@@ -193,6 +222,20 @@ For containerized runs (for example Docker Compose), use:
 ```bash
 --http-listen 0.0.0.0:8080
 ```
+
+## Docker Demo (Tempo + Grafana Dashboard)
+
+Start the full demo stack:
+
+```bash
+docker compose -f examples/docker-compose/tempo-grafana/docker-compose.yml up --build
+```
+
+Open Grafana at `http://localhost:${GRAFANA_PORT:-3000}`. The `Spanforge Overview` dashboard and Tempo datasource are provisioned automatically. The spanforge container runs the checkout brownout phase file and restarts after each run so the dashboard keeps receiving fresh traces.
+
+The dashboard includes recent trace, error trace, OK trace, and duration threshold panels backed by the Tempo datasource.
+
+![Spanforge Tempo/Grafana dashboard](assets/spanforge-overview-dashboard.png)
 
 ## Releases
 

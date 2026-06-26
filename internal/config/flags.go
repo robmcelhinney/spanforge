@@ -19,6 +19,9 @@ type FlagValues struct {
 	Duration         time.Duration
 	Count            int
 	Seed             int64
+	RunID            string
+	PhaseFile        string
+	Load             string
 	Workers          int
 	Profile          string
 	Routes           int
@@ -61,6 +64,9 @@ type yamlFlagValues struct {
 	Duration         *string  `yaml:"duration"`
 	Count            *int     `yaml:"count"`
 	Seed             *int64   `yaml:"seed"`
+	RunID            *string  `yaml:"run_id"`
+	PhaseFile        *string  `yaml:"phase_file"`
+	Load             *string  `yaml:"load"`
 	Workers          *int     `yaml:"workers"`
 	Profile          *string  `yaml:"profile"`
 	Routes           *int     `yaml:"routes"`
@@ -104,6 +110,9 @@ func AddFlags(fs *pflag.FlagSet, v *FlagValues) {
 	fs.DurationVar(&v.Duration, "duration", 30*time.Second, "Run duration (set to 0s for no time limit)")
 	fs.IntVar(&v.Count, "count", 0, "Total span/trace count (overrides duration if > 0)")
 	fs.Int64Var(&v.Seed, "seed", 1, "Random seed")
+	fs.StringVar(&v.RunID, "run-id", "", "Stable run identifier for generated telemetry")
+	fs.StringVar(&v.PhaseFile, "phase-file", "", "Path to load phase YAML file")
+	fs.StringVar(&v.Load, "load", "", "Built-in load preset")
 	fs.IntVar(&v.Workers, "workers", 1, "Concurrent generator workers")
 	fs.StringVar(&v.Profile, "profile", "web", "Generation profile")
 	fs.IntVar(&v.Routes, "routes", 8, "Number of named routes/methods per profile")
@@ -196,6 +205,9 @@ func FromFlagsWithOverrides(v FlagValues, cliOverrides map[string]bool) (Config,
 		Duration:         v.Duration,
 		Count:            v.Count,
 		Seed:             v.Seed,
+		RunID:            v.RunID,
+		PhaseFile:        v.PhaseFile,
+		Load:             v.Load,
 		Workers:          v.Workers,
 		Profile:          v.Profile,
 		Routes:           v.Routes,
@@ -300,6 +312,9 @@ func mergeFromYAML(v FlagValues, cliOverrides map[string]bool) (FlagValues, erro
 	}
 	setInt("count", y.Count, &v.Count)
 	setInt64("seed", y.Seed, &v.Seed)
+	setString("run-id", y.RunID, &v.RunID)
+	setString("phase-file", y.PhaseFile, &v.PhaseFile)
+	setString("load", y.Load, &v.Load)
 	setInt("workers", y.Workers, &v.Workers)
 	setString("profile", y.Profile, &v.Profile)
 	setInt("routes", y.Routes, &v.Routes)
@@ -459,6 +474,9 @@ func mergeFromEnv(v FlagValues, cliOverrides map[string]bool) (FlagValues, error
 	if err := setInt64("seed", "SPANFORGE_SEED", &v.Seed); err != nil {
 		return FlagValues{}, err
 	}
+	setString("run-id", "SPANFORGE_RUN_ID", &v.RunID)
+	setString("phase-file", "SPANFORGE_PHASE_FILE", &v.PhaseFile)
+	setString("load", "SPANFORGE_LOAD", &v.Load)
 	if err := setInt("workers", "SPANFORGE_WORKERS", &v.Workers); err != nil {
 		return FlagValues{}, err
 	}

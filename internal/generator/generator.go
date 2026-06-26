@@ -50,11 +50,13 @@ func (g *Generator) GenerateTrace(start time.Time) model.Trace {
 	rootID := g.newSpanID()
 	routeIdx := g.rng.Intn(max(1, g.cfg.Routes))
 	root := g.profile.buildRoot(g.topology.Frontdoor, routeIdx, start, rootID, traceID, g.sampleDurationForProfile())
+	g.applyRunAttrs(&root)
 	g.applyCardinalityAttrs(&root)
 	g.maybeAddProfileEvent(&root)
 	retrySpan := g.maybeErrorAndRetry(&root)
 	trace.Spans = append(trace.Spans, root)
 	if retrySpan != nil {
+		g.applyRunAttrs(retrySpan)
 		g.applyCardinalityAttrs(retrySpan)
 		trace.Spans = append(trace.Spans, *retrySpan)
 	}
@@ -82,6 +84,8 @@ func (g *Generator) generateChildren(trace *model.Trace, parent model.Span, leve
 		routeIdx := g.rng.Intn(max(1, g.cfg.Routes))
 		if g.cfg.Profile == "queue" {
 			producer, consumer := g.profile.buildQueuePair(parent, service, routeIdx, start, g.newSpanID(), g.newSpanID(), trace.TraceID, g.sampleDurationForProfile())
+			g.applyRunAttrs(&producer)
+			g.applyRunAttrs(&consumer)
 			g.applyCardinalityAttrs(&producer)
 			g.applyCardinalityAttrs(&consumer)
 			g.maybeAddProfileEvent(&producer)
@@ -90,10 +94,12 @@ func (g *Generator) generateChildren(trace *model.Trace, parent model.Span, leve
 			consumerRetry := g.maybeErrorAndRetry(&consumer)
 			trace.Spans = append(trace.Spans, producer, consumer)
 			if producerRetry != nil {
+				g.applyRunAttrs(producerRetry)
 				g.applyCardinalityAttrs(producerRetry)
 				trace.Spans = append(trace.Spans, *producerRetry)
 			}
 			if consumerRetry != nil {
+				g.applyRunAttrs(consumerRetry)
 				g.applyCardinalityAttrs(consumerRetry)
 				trace.Spans = append(trace.Spans, *consumerRetry)
 			}
@@ -101,15 +107,41 @@ func (g *Generator) generateChildren(trace *model.Trace, parent model.Span, leve
 			continue
 		}
 		child := g.profile.buildChild(parent, service, routeIdx, start, g.newSpanID(), trace.TraceID, g.sampleDurationForProfile(), g.rng.Float64() < g.cfg.DBHeavy, g.rng.Float64() < g.cfg.CacheHitRate)
+		g.applyRunAttrs(&child)
 		g.applyCardinalityAttrs(&child)
 		g.maybeAddProfileEvent(&child)
 		retrySpan := g.maybeErrorAndRetry(&child)
 		trace.Spans = append(trace.Spans, child)
 		if retrySpan != nil {
+			g.applyRunAttrs(retrySpan)
 			g.applyCardinalityAttrs(retrySpan)
 			trace.Spans = append(trace.Spans, *retrySpan)
 		}
 		g.generateChildren(trace, child, level+1)
+	}
+}
+
+func (g *Generator) applyRunAttrs(span *model.Span) {
+	if span.Attributes == nil {
+		span.Attributes = model.Attrs{}
+	}
+	span.Attributes["spanforge.profile"] = g.cfg.Profile
+	span.Attributes["spanforge.seed"] = g.cfg.Seed
+	if strings.TrimSpace(g.cfg.RunID) != "" {
+		span.Attributes["spanforge.run_id"] = g.cfg.RunID
+	}
+	if strings.TrimSpace(g.cfg.Phase) != "" {
+		span.Attributes["spanforge.phase"] = g.cfg.Phase
+	}
+	if span.Resource.Attributes == nil {
+		span.Resource.Attributes = model.Attrs{}
+	}
+	span.Resource.Attributes["spanforge.profile"] = g.cfg.Profile
+	if strings.TrimSpace(g.cfg.RunID) != "" {
+		span.Resource.Attributes["spanforge.run_id"] = g.cfg.RunID
+	}
+	if strings.TrimSpace(g.cfg.Phase) != "" {
+		span.Resource.Attributes["spanforge.phase"] = g.cfg.Phase
 	}
 }
 

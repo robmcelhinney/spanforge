@@ -15,6 +15,8 @@ rate: 42
 rate_unit: traces
 rate_interval: 2s
 duration: 15s
+run_id: yaml-run
+phase_file: phases.yaml
 profile: grpc
 routes: 4
 services: 5
@@ -81,6 +83,12 @@ batch_size: 64
 	if cfg.Profile != "grpc" {
 		t.Fatalf("profile=%q want grpc", cfg.Profile)
 	}
+	if cfg.RunID != "yaml-run" {
+		t.Fatalf("run-id=%q want yaml-run", cfg.RunID)
+	}
+	if cfg.PhaseFile != "phases.yaml" {
+		t.Fatalf("phase-file=%q want phases.yaml", cfg.PhaseFile)
+	}
 	if cfg.Variety != "high" {
 		t.Fatalf("variety=%q want high", cfg.Variety)
 	}
@@ -142,6 +150,8 @@ func TestFromFlagsWithYAMLCLIOverrides(t *testing.T) {
 
 func TestFromFlagsEnvOverridesYAMLAndCLIOverridesEnv(t *testing.T) {
 	t.Setenv("SPANFORGE_PROFILE", "queue")
+	t.Setenv("SPANFORGE_RUN_ID", "env-run")
+	t.Setenv("SPANFORGE_LOAD", "brownout")
 	t.Setenv("SPANFORGE_SERVICES", "11")
 
 	tmp := t.TempDir()
@@ -188,6 +198,12 @@ func TestFromFlagsEnvOverridesYAMLAndCLIOverridesEnv(t *testing.T) {
 	}
 	if cfg.Profile != "queue" {
 		t.Fatalf("profile=%q want queue", cfg.Profile)
+	}
+	if cfg.RunID != "env-run" {
+		t.Fatalf("run-id=%q want env-run", cfg.RunID)
+	}
+	if cfg.Load != "brownout" {
+		t.Fatalf("load=%q want brownout", cfg.Load)
 	}
 	if cfg.Services != 5 {
 		t.Fatalf("services=%d want 5", cfg.Services)
