@@ -125,6 +125,13 @@ $ spanforge --format zipkin-json --output zipkin --zipkin-endpoint http://localh
 # Run benchmark mode with sink disabled and write JSON report
 $ spanforge --output noop --format otlp-http --duration 30s --report-file ./out/report.json
 
+# Send OTLP HTTP traces, write a report, then validate sampled traces in Tempo
+$ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --duration 30s --report-file ./out/tempo-report.json
+$ spanforge validate tempo --endpoint http://localhost:3200 --report-file ./out/tempo-report.json
+
+# Validate sampled traces in Jaeger after a Jaeger/OTLP run that wrote ./out/jaeger-report.json
+$ spanforge validate jaeger --endpoint http://localhost:16686 --report-file ./out/jaeger-report.json --output json
+
 # Run continuously (no duration deadline)
 $ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --duration 0s
 

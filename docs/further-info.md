@@ -223,6 +223,36 @@ For containerized runs (for example Docker Compose), use:
 --http-listen 0.0.0.0:8080
 ```
 
+## Backend Validation
+
+Write a report while sending traces to a backend, then validate the sampled trace IDs from that report:
+
+```bash
+./bin/spanforge \
+  --format otlp-http \
+  --output otlp \
+  --otlp-endpoint http://localhost:4318 \
+  --duration 30s \
+  --report-file ./out/report.json
+
+./bin/spanforge validate tempo \
+  --endpoint http://localhost:3200 \
+  --report-file ./out/report.json \
+  --wait 30s \
+  --poll-interval 2s
+```
+
+Jaeger uses the same report file:
+
+```bash
+./bin/spanforge validate jaeger \
+  --endpoint http://localhost:16686 \
+  --report-file ./out/report.json \
+  --output json
+```
+
+Validation checks sampled traces, `spanforge.run_id`, expected services, phase labels when present, error spans, and spans over 100ms. It avoids exact trace-count assertions because backend ingestion and retention timing can make exact counts brittle.
+
 ## Docker Demo (Tempo + Grafana Dashboard)
 
 Start the full demo stack:

@@ -354,24 +354,24 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 ## Step 17 — Backend validation
 
-- [ ] Step 17 complete
+- [x] Step 17 complete
 
 ### Deliverables
 
-- [ ] `spanforge validate tempo`.
-- [ ] `spanforge validate jaeger`.
-- [ ] `--wait` and `--poll-interval`.
-- [ ] `--output text|json`.
-- [ ] Validation using `spanforge.run_id` and sample trace IDs from `--report-file`.
+- [x] `spanforge validate tempo`.
+- [x] `spanforge validate jaeger`.
+- [x] `--wait` and `--poll-interval`.
+- [x] `--output text|json`.
+- [x] Validation using `spanforge.run_id` and sample trace IDs from `--report-file`.
 
 ### Actions
 
-- [ ] Define validation result schema with pass, warn, and fail states.
-- [ ] Add Tempo query client.
-- [ ] Add Jaeger query client.
-- [ ] Check run ID, expected services, sampled traces, error spans, high-latency spans, and phase labels.
-- [ ] Avoid exact trace-count promises by default.
-- [ ] Add integration tests where local backend APIs are practical.
+- [x] Define validation result schema with pass, warn, and fail states.
+- [x] Add Tempo query client.
+- [x] Add Jaeger query client.
+- [x] Check run ID, expected services, sampled traces, error spans, high-latency spans, and phase labels.
+- [x] Avoid exact trace-count promises by default.
+- [x] Add integration tests where local backend APIs are practical.
 
 ## Step 18 — Weird and invalid telemetry lab
 
