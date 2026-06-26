@@ -209,6 +209,7 @@ make bench-transport
 ## Further Reading
 
 Detailed runbooks, presets, and release/CI notes are in `docs/further-info.md`.
+Backend compatibility is documented in `docs/compatibility.md`, and stable report/validation JSON schemas are documented in `docs/schemas.md`.
 
 Planning docs:
 

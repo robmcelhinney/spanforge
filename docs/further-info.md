@@ -272,6 +272,9 @@ The dashboard includes recent trace, error trace, OK trace, and duration thresho
 - CI workflow: `.github/workflows/ci.yml` (build + test + vet).
 - Tag-based release workflow: `.github/workflows/release.yml`.
 - GoReleaser config: `.goreleaser.yaml` (binaries + multi-arch Docker images/manifests for GHCR).
+- Backend compatibility matrix: `docs/compatibility.md`.
+- Stable report and validation schemas: `docs/schemas.md`.
+- Contribution guide and issue templates: `CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/`.
 
 Required GitHub setup for releases:
 
@@ -284,6 +287,14 @@ Release flow:
 1. `git tag vX.Y.Z`
 2. `git push origin vX.Y.Z`
 3. GitHub Actions runs `release.yml` and publishes binaries + multi-arch GHCR images.
+
+Pre-release checklist:
+
+1. Run `go test ./...`.
+2. Run the Tempo and Jaeger Docker smoke workflows locally or in CI.
+3. Confirm `docs/compatibility.md` matches the tested backend routes.
+4. Confirm `docs/schemas.md` includes any report or validation JSON changes.
+5. Push a semver tag only after the changelog/release notes are ready.
 
 ## Transport Perf Harness
 

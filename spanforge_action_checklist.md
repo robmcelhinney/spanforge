@@ -400,17 +400,16 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 - [ ] Published GitHub releases.
 - [ ] GHCR Docker images.
-- [ ] Compatibility matrix for OpenTelemetry Collector, Tempo, Jaeger, and Zipkin.
-- [ ] Stable profile names.
-- [ ] Stable report JSON schema.
-- [ ] Stable validation JSON schema.
-- [ ] Contribution guide and issue templates.
-- [ ] Homebrew tap when release usage justifies it.
+- [x] Compatibility matrix for OpenTelemetry Collector, Tempo, Jaeger, and Zipkin.
+- [x] Stable profile names.
+- [x] Stable report JSON schema.
+- [x] Stable validation JSON schema.
+- [x] Contribution guide and issue templates.
 
 ### Actions
 
 - [ ] Verify release workflow against a real tag.
 - [ ] Publish Docker image tags for latest and versioned releases.
-- [ ] Add backend compatibility docs.
-- [ ] Mark stable schemas and document migration policy.
-- [ ] Add contribution and issue templates.
+- [x] Add backend compatibility docs.
+- [x] Mark stable schemas and document migration policy.
+- [x] Add contribution and issue templates.
