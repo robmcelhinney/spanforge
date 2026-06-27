@@ -394,12 +394,12 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 ## Step 19 — Serious OSS release
 
-- [ ] Step 19 complete
+- [x] Step 19 complete
 
 ### Deliverables
 
-- [ ] Published GitHub releases.
-- [ ] GHCR Docker images.
+- [x] Published GitHub releases.
+- [x] GHCR Docker images.
 - [x] Compatibility matrix for OpenTelemetry Collector, Tempo, Jaeger, and Zipkin.
 - [x] Stable profile names.
 - [x] Stable report JSON schema.
@@ -408,8 +408,8 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 ### Actions
 
-- [ ] Verify release workflow against a real tag.
-- [ ] Publish Docker image tags for latest and versioned releases.
+- [x] Verify release workflow against a real tag.
+- [x] Publish Docker image tags for latest and versioned releases.
 - [x] Add backend compatibility docs.
 - [x] Mark stable schemas and document migration policy.
 - [x] Add contribution and issue templates.
