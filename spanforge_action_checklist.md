@@ -184,12 +184,12 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 ## Step 8 — Add OTLP gRPC sink
 
-- [ ] Step 8 complete
+- [x] Step 8 complete
 
 ### Deliverables
 
 - [x] `--format otlp-grpc` works.
-- [ ] Comparable performance to HTTP version.
+- [x] Comparable performance to HTTP version.
 
 ### Actions
 
@@ -375,22 +375,22 @@ Status: implementation checklist. Steps 1-13 track the completed MVP and hardeni
 
 ## Step 18 — Weird and invalid telemetry lab
 
-- [ ] Step 18 complete
+- [x] Step 18 complete
 
 ### Deliverables
 
-- [ ] `--weird clock-skew,huge-duration,future-timestamp,high-cardinality-route,huge-attribute,mixed-semconv`.
-- [ ] `--invalid duplicate-span-id,negative-duration,bad-encoded-payload,empty-required-fields`.
-- [ ] Docs explaining what each mode tests and whether ingestion should usually succeed.
-- [ ] Demo dashboard panels for weird traces.
+- [x] `--weird clock-skew,huge-duration,future-timestamp,high-cardinality-route,huge-attribute,mixed-semconv`.
+- [x] `--invalid duplicate-span-id,negative-duration,bad-encoded-payload,empty-required-fields`.
+- [x] Docs explaining what each mode tests and whether ingestion should usually succeed.
+- [x] Demo dashboard panels for weird traces.
 
 ### Actions
 
-- [ ] Add config parsing and validation for `--weird` and `--invalid`.
-- [ ] Implement weird modes as valid trace mutations where possible.
-- [ ] Keep invalid modes explicit and hard to trigger accidentally.
-- [ ] Document backend-specific expected behavior.
-- [ ] Add tests that distinguish valid weird telemetry from intentionally invalid payloads.
+- [x] Add config parsing and validation for `--weird` and `--invalid`.
+- [x] Implement weird modes as valid trace mutations where possible.
+- [x] Keep invalid modes explicit and hard to trigger accidentally.
+- [x] Document backend-specific expected behavior.
+- [x] Add tests that distinguish valid weird telemetry from intentionally invalid payloads.
 
 ## Step 19 — Serious OSS release
 

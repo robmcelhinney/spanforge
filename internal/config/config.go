@@ -41,6 +41,8 @@ type Config struct {
 	CacheHitRate     float64
 	Variety          string
 	HighCardinality  bool
+	Weird            []string
+	Invalid          []string
 	Format           string
 	Output           string
 	File             string
@@ -98,6 +100,45 @@ func ParseHeaders(items []string) (map[string]string, error) {
 	return out, nil
 }
 
+func normalizeModes(modes []string) []string {
+	out := make([]string, 0, len(modes))
+	seen := map[string]struct{}{}
+	for _, mode := range modes {
+		n := strings.ToLower(strings.TrimSpace(mode))
+		if n == "" {
+			continue
+		}
+		if _, ok := seen[n]; ok {
+			continue
+		}
+		seen[n] = struct{}{}
+		out = append(out, n)
+	}
+	return out
+}
+
+func containsMode(modes []string, want string) bool {
+	for _, mode := range modes {
+		if mode == want {
+			return true
+		}
+	}
+	return false
+}
+
+func validateModes(label string, modes []string, allowed []string) error {
+	allowedSet := map[string]struct{}{}
+	for _, mode := range allowed {
+		allowedSet[mode] = struct{}{}
+	}
+	for _, mode := range modes {
+		if _, ok := allowedSet[mode]; !ok {
+			return fmt.Errorf("invalid %s mode %q", label, mode)
+		}
+	}
+	return nil
+}
+
 func (c Config) Validate() error {
 	if c.RateValue <= 0 {
 		return fmt.Errorf("rate must be > 0")
@@ -152,6 +193,26 @@ func (c Config) Validate() error {
 	case "", "low", "medium", "high":
 	default:
 		return fmt.Errorf("variety must be one of low, medium, high")
+	}
+
+	c.Weird = normalizeModes(c.Weird)
+	c.Invalid = normalizeModes(c.Invalid)
+
+	if err := validateModes("weird", c.Weird, []string{"clock-skew", "huge-duration", "future-timestamp", "high-cardinality-route", "huge-attribute", "mixed-semconv"}); err != nil {
+		return err
+	}
+	if err := validateModes("invalid", c.Invalid, []string{"duplicate-span-id", "negative-duration", "bad-encoded-payload", "empty-required-fields"}); err != nil {
+		return err
+	}
+	if len(c.Invalid) > 0 && c.Output == "noop" {
+		return fmt.Errorf("invalid telemetry modes require a real output sink")
+	}
+	if containsMode(c.Invalid, "bad-encoded-payload") {
+		switch c.Format {
+		case "jsonl", "otlp-http", "zipkin-json":
+		default:
+			return fmt.Errorf("bad-encoded-payload only supports jsonl, otlp-http, and zipkin-json formats")
+		}
 	}
 
 	needsOTLPEndpoint := c.Output == "otlp" || ((c.Format == "otlp-http" || c.Format == "otlp-grpc") && c.Output != "noop")

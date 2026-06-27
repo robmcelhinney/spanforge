@@ -132,6 +132,12 @@ $ spanforge validate tempo --endpoint http://localhost:3200 --report-file ./out/
 # Validate sampled traces in Jaeger after a Jaeger/OTLP run that wrote ./out/jaeger-report.json
 $ spanforge validate jaeger --endpoint http://localhost:16686 --report-file ./out/jaeger-report.json --output json
 
+# Stress a backend with awkward but valid telemetry
+$ spanforge --profile api-gateway --weird future-timestamp,high-cardinality-route --format otlp-http --output otlp --otlp-endpoint http://localhost:4318
+
+# Generate intentionally invalid payloads for backend rejection testing
+$ spanforge --profile web --invalid duplicate-span-id,negative-duration --format zipkin-json --output zipkin --zipkin-endpoint http://localhost:9411
+
 # Run continuously (no duration deadline)
 $ spanforge --format otlp-http --output otlp --otlp-endpoint http://localhost:4318 --duration 0s
 

@@ -62,6 +62,7 @@ func (g *Generator) GenerateTrace(start time.Time) model.Trace {
 	}
 
 	g.generateChildren(&trace, root, 1)
+	g.applyModes(&trace)
 	return trace
 }
 

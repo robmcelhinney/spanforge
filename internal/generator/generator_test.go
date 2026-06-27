@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -94,5 +95,50 @@ func TestRunAttributesAddedToSpans(t *testing.T) {
 		if span.Attributes["spanforge.seed"] != int64(42) {
 			t.Fatalf("spanforge.seed=%v want 42", span.Attributes["spanforge.seed"])
 		}
+	}
+}
+
+func TestWeirdModesKeepTraceValid(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Weird = []string{"future-timestamp", "high-cardinality-route", "huge-attribute", "mixed-semconv"}
+	trace := New(cfg).GenerateTrace(time.Unix(1700000000, 0).UTC())
+	if len(trace.Spans) == 0 {
+		t.Fatal("expected spans")
+	}
+	if !trace.Spans[0].StartTime.After(time.Unix(1700000000, 0).UTC()) {
+		t.Fatalf("expected future timestamp, got %s", trace.Spans[0].StartTime)
+	}
+	foundBlob := false
+	for _, span := range trace.Spans {
+		if span.Duration <= 0 {
+			t.Fatalf("weird mode produced non-positive duration: %s", span.Duration)
+		}
+		if route, ok := span.Attributes["http.route"].(string); ok && route != "" && strings.Contains(route, "request=") {
+			foundBlob = true
+		}
+		if _, ok := span.Attributes["spanforge.blob"]; ok {
+			foundBlob = true
+		}
+	}
+	if !foundBlob {
+		t.Fatal("expected weird attributes to be added")
+	}
+}
+
+func TestInvalidModesBreakTraceShape(t *testing.T) {
+	cfg := baseConfig()
+	cfg.Invalid = []string{"duplicate-span-id", "negative-duration", "empty-required-fields"}
+	trace := New(cfg).GenerateTrace(time.Unix(1700000000, 0).UTC())
+	if len(trace.Spans) < 2 {
+		t.Fatal("expected multiple spans")
+	}
+	if trace.Spans[1].SpanID != trace.Spans[0].SpanID {
+		t.Fatal("expected duplicate span IDs")
+	}
+	if trace.Spans[len(trace.Spans)-1].Duration >= 0 {
+		t.Fatal("expected negative duration")
+	}
+	if trace.Spans[0].Name != "" {
+		t.Fatal("expected empty required fields mutation")
 	}
 }

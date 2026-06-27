@@ -766,6 +766,18 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 		}
 		batchSpans := len(spanBatch)
 		batchTraces := pendingTraceCount
+		if hasMode(cfg.Invalid, "bad-encoded-payload") {
+			if _, err := out.WriteString("{\"broken\":\n"); err != nil {
+				return err
+			}
+			spanBatch = spanBatch[:0]
+			pendingTraceCount = 0
+			if err := out.Flush(); err != nil {
+				return err
+			}
+			stats.add(batchTraces, batchSpans)
+			return nil
+		}
 		if err := jsonlenc.WriteTrace(out, model.Trace{Spans: spanBatch}); err != nil {
 			return err
 		}
@@ -788,6 +800,9 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 		spanBatch = spanBatch[:0]
 		pendingTraceCount = 0
 		return dispatchNetwork(func(reqCtx context.Context) error {
+			if hasMode(cfg.Invalid, "bad-encoded-payload") {
+				return otlpHTTPClient.SendRaw(reqCtx, []byte{0x00, 0x01, 0x02, 0x03})
+			}
 			return otlpHTTPClient.SendSpans(reqCtx, batch)
 		}, batchTraces, batchSpans)
 	}
@@ -814,6 +829,9 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 		spanBatch = spanBatch[:0]
 		pendingTraceCount = 0
 		return dispatchNetwork(func(reqCtx context.Context) error {
+			if hasMode(cfg.Invalid, "bad-encoded-payload") {
+				return zipkinClient.SendRaw(reqCtx, []byte("{\"broken\":"))
+			}
 			return zipkinClient.SendSpans(reqCtx, batch)
 		}, batchTraces, batchSpans)
 	}
@@ -928,6 +946,15 @@ func consumeTraces(ctx context.Context, out *bufio.Writer, cfg config.Config, tr
 			}
 		}
 	}
+}
+
+func hasMode(modes []string, want string) bool {
+	for _, mode := range modes {
+		if mode == want {
+			return true
+		}
+	}
+	return false
 }
 
 func sendWithRetry(ctx context.Context, retries int, backoff, timeout time.Duration, send func(context.Context) error) error {

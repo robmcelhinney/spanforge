@@ -38,6 +38,8 @@ type FlagValues struct {
 	CacheHitRate     string
 	Variety          string
 	HighCardinality  bool
+	Weird            []string
+	Invalid          []string
 	Format           string
 	Output           string
 	File             string
@@ -83,6 +85,8 @@ type yamlFlagValues struct {
 	CacheHitRate     *string  `yaml:"cache_hit_rate"`
 	Variety          *string  `yaml:"variety"`
 	HighCardinality  *bool    `yaml:"high_cardinality"`
+	Weird            []string `yaml:"weird"`
+	Invalid          []string `yaml:"invalid"`
 	Format           *string  `yaml:"format"`
 	Output           *string  `yaml:"output"`
 	File             *string  `yaml:"file"`
@@ -129,6 +133,8 @@ func AddFlags(fs *pflag.FlagSet, v *FlagValues) {
 	fs.StringVar(&v.CacheHitRate, "cache-hit-rate", "85%", "Cache hit ratio")
 	fs.StringVar(&v.Variety, "variety", "medium", "Variety level: low, medium, high")
 	fs.BoolVar(&v.HighCardinality, "high-cardinality", false, "Enable high-cardinality attributes (request IDs, message IDs)")
+	fs.StringSliceVar(&v.Weird, "weird", nil, "Valid but awkward telemetry modes (repeat or comma-separate)")
+	fs.StringSliceVar(&v.Invalid, "invalid", nil, "Intentionally invalid telemetry modes (repeat or comma-separate)")
 	fs.StringVar(&v.Format, "format", "jsonl", "Output format")
 	fs.StringVar(&v.Output, "output", "stdout", "Output sink")
 	fs.StringVar(&v.File, "file", "", "Output file path")
@@ -224,6 +230,8 @@ func FromFlagsWithOverrides(v FlagValues, cliOverrides map[string]bool) (Config,
 		CacheHitRate:     cacheHitRate,
 		Variety:          v.Variety,
 		HighCardinality:  v.HighCardinality,
+		Weird:            normalizeModes(v.Weird),
+		Invalid:          normalizeModes(v.Invalid),
 		Format:           v.Format,
 		Output:           v.Output,
 		File:             v.File,
@@ -337,6 +345,12 @@ func mergeFromYAML(v FlagValues, cliOverrides map[string]bool) (FlagValues, erro
 	setString("cache-hit-rate", y.CacheHitRate, &v.CacheHitRate)
 	setString("variety", y.Variety, &v.Variety)
 	setBool("high-cardinality", y.HighCardinality, &v.HighCardinality)
+	if len(y.Weird) > 0 && !overridden("weird") {
+		v.Weird = append([]string(nil), y.Weird...)
+	}
+	if len(y.Invalid) > 0 && !overridden("invalid") {
+		v.Invalid = append([]string(nil), y.Invalid...)
+	}
 	setString("format", y.Format, &v.Format)
 	setString("output", y.Output, &v.Output)
 	setString("file", y.File, &v.File)
@@ -511,6 +525,12 @@ func mergeFromEnv(v FlagValues, cliOverrides map[string]bool) (FlagValues, error
 	if err := setBool("high-cardinality", "SPANFORGE_HIGH_CARDINALITY", &v.HighCardinality); err != nil {
 		return FlagValues{}, err
 	}
+	if raw, ok := os.LookupEnv("SPANFORGE_WEIRD"); ok && !overridden("weird") {
+		v.Weird = parseModeEnv(raw)
+	}
+	if raw, ok := os.LookupEnv("SPANFORGE_INVALID"); ok && !overridden("invalid") {
+		v.Invalid = parseModeEnv(raw)
+	}
 	setString("format", "SPANFORGE_FORMAT", &v.Format)
 	setString("output", "SPANFORGE_OUTPUT", &v.Output)
 	setString("file", "SPANFORGE_FILE", &v.File)
@@ -557,4 +577,13 @@ func mergeFromEnv(v FlagValues, cliOverrides map[string]bool) (FlagValues, error
 	}
 
 	return v, nil
+}
+
+func parseModeEnv(raw string) []string {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+	return normalizeModes(strings.FieldsFunc(raw, func(r rune) bool {
+		return r == ',' || r == ' ' || r == '\t'
+	}))
 }

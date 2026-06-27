@@ -172,6 +172,43 @@ Each span includes `spanforge.phase`, and the report file includes per-phase tra
   --duration 3m
 ```
 
+### 4) Weird and Invalid Telemetry Lab
+
+Use the weird modes to produce valid but awkward traces:
+
+```bash
+./bin/spanforge \
+  --profile api-gateway \
+  --weird future-timestamp,high-cardinality-route,huge-attribute,mixed-semconv \
+  --format otlp-http \
+  --output otlp \
+  --otlp-endpoint http://localhost:4318
+```
+
+Use the invalid modes when you want to test rejection paths:
+
+```bash
+./bin/spanforge \
+  --profile web \
+  --invalid duplicate-span-id,negative-duration,empty-required-fields \
+  --format zipkin-json \
+  --output zipkin \
+  --zipkin-endpoint http://localhost:9411
+```
+
+Behavior notes:
+
+- `clock-skew` shifts some child spans backward or forward relative to their parent.
+- `huge-duration` exaggerates a span duration without changing the trace shape.
+- `future-timestamp` shifts the whole trace into the future.
+- `high-cardinality-route` appends request-specific data to route labels.
+- `huge-attribute` adds a large string payload to stress attribute handling.
+- `mixed-semconv` emits duplicate attributes across old and new semantic-convention keys.
+- `duplicate-span-id` reuses a span identifier within one trace.
+- `negative-duration` emits a span with a negative duration.
+- `empty-required-fields` clears key fields on the first span.
+- `bad-encoded-payload` corrupts the final encoded payload for supported text/binary export paths.
+
 ## Docker Quickstart (Tempo)
 
 1. Build the image:

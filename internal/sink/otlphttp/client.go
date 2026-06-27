@@ -84,3 +84,42 @@ func (c *Client) SendSpans(ctx context.Context, spans []model.Span) error {
 	}
 	return nil
 }
+
+func (c *Client) SendRaw(ctx context.Context, body []byte) error {
+	if len(body) == 0 {
+		return nil
+	}
+	reqBody := io.Reader(bytes.NewReader(body))
+	if c.gzip {
+		var gzBuf bytes.Buffer
+		zw := gzip.NewWriter(&gzBuf)
+		if _, err := zw.Write(body); err != nil {
+			return err
+		}
+		if err := zw.Close(); err != nil {
+			return err
+		}
+		reqBody = bytes.NewReader(gzBuf.Bytes())
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint+"/v1/traces", reqBody)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/x-protobuf")
+	if c.gzip {
+		req.Header.Set("Content-Encoding", "gzip")
+	}
+	for k, v := range c.headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		data, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		return fmt.Errorf("otlp http error: %s: %s", resp.Status, strings.TrimSpace(string(data)))
+	}
+	return nil
+}
