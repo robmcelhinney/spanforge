@@ -250,7 +250,6 @@ Use these documents for more detail:
 
 Use these documents to track plans and progress:
 
-- [product roadmap](ROADMAP.md)
 - [implementation checklist](spanforge_action_checklist.md)
 
 ## Acknowledgements
